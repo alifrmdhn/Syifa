@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Antrian;
 use App\Models\LayananStatus;
+use Livewire\Attributes\On;
 
 class AdminMonitor extends Component
 {
@@ -123,25 +124,29 @@ $prev = $query
     //         $this->currentId = null;
     //     }
     // }
-    public function closeQueue()
+   public function closeQueue()
 {
-    // hapus semua data antrian
     Antrian::truncate();
 
-    // reset current queue
     $this->currentId = null;
 
-    $this->dispatch(
-        'queue-reset-success'
-    );
+    LayananStatus::query()->update([
+        'is_open' => false,
+        'reopen_time' => 'CLOSED'
+    ]);
+
+    $this->dispatch('queue-reset-success');
 }
 
     public function toggleLayanan($kode)
-    {
-        $layanan = LayananStatus::where('kode', $kode)->firstOrFail();
-        $layanan->update(['is_open' => !$layanan->is_open]);
-    }
+{
+    $layanan = LayananStatus::where('kode', $kode)->firstOrFail();
 
+    $layanan->update([
+        'is_open' => true,
+        'reopen_time' => null,
+    ]);
+}
     // public function render()
     // {
     //     return view('livewire.admin-monitor', [
@@ -183,6 +188,25 @@ $prev = $query
     protected function getUserLoket()
 {
     return auth()->user()->loket;
+}
+#[On('close-layanan')]
+public function closeLayanan($kode, $jam)
+{
+    $layanan = LayananStatus::where('kode', $kode)->firstOrFail();
+
+    $layanan->update([
+        'is_open' => false,
+        'reopen_time' => $jam,
+    ]);
+}
+public function openAllServices()
+{
+    LayananStatus::query()->update([
+        'is_open' => true,
+        'reopen_time' => null,
+    ]);
+
+    $this->dispatch('services-opened');
 }
 
 }

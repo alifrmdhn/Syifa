@@ -9,6 +9,7 @@ class LayananStatus extends Model
     protected $fillable = [
         'kode',
         'nama',
-        'is_open'
+        'is_open',
+        'reopen_time'
     ];
 }

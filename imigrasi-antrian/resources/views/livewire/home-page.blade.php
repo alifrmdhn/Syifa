@@ -311,7 +311,7 @@ color:#64748b;
 font-weight:500;
 }
 
-.hp-ctag{
+/* .hp-ctag{
 display:inline-flex;
 align-items:center;
 gap:4px;
@@ -324,6 +324,20 @@ padding:2px 9px;
 border-radius:50px;
 margin-top:10px;
 letter-spacing:.5px;
+} */
+.hp-ctag{
+    display:inline-block;
+    background:#fff5f5;
+    border:1px solid #fecaca;
+    color:#dc2626;
+    font-size:.62rem;
+    font-weight:700;
+    padding:6px 12px;
+    border-radius:50px;
+    margin-top:10px;
+    letter-spacing:.5px;
+    line-height:1.5;
+    white-space:normal;
 }
 
 .hp-arr{
@@ -578,13 +592,34 @@ min-height:auto;
                             </div>
 
                             {{-- STATUS --}}
-                            @if(!$item->is_open)
+        {{-- STATUS --}}
+@if(!$item->is_open)
 
-                                <div class="hp-ctag">
-                                    ⊗ Mohon Maaf Antrian Ditutup dan Buka Kembali Jam 13:00 WITA
-                                </div>
+<div class="hp-ctag">
 
-                            @endif
+    @if($item->reopen_time === 'CLOSED')
+
+        Mohon Maaf, Layanan Antrian Untuk Hari Ini Telah Ditutup.<br>
+        Silakan Kembali Pada Jam Operasional Berikutnya.
+
+    @elseif(in_array($item->kode, ['B', 'D']))
+
+        Mohon Maaf, Kuota Layanan Hari Ini Telah Terpenuhi.<br>
+        Silakan Mengambil Nomor Antrian Kembali Mulai Pukul
+        {{ $item->reopen_time ?? '07:30' }}
+        WITA.
+
+    @else
+
+        ⊗ Mohon Maaf Antrian Ditutup dan Buka Kembali Jam
+        {{ $item->reopen_time ?? '13:00' }}
+        WITA.
+
+    @endif
+
+</div>
+
+@endif
 
                         </div>
 

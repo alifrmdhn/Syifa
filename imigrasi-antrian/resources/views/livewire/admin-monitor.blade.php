@@ -36,6 +36,17 @@ function confirmResetQueue()
 document.addEventListener('livewire:init', () => {
 
     Livewire.on('queue-reset-success', () => {
+      Livewire.on('services-opened', () => {
+
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: 'Semua layanan telah dibuka kembali.',
+        timer: 2000,
+        showConfirmButton: false
+    });
+
+});
 
         Swal.fire({
             icon: 'success',
@@ -246,9 +257,32 @@ document.addEventListener('livewire:init', () => {
       <div class="am-mascot"><img src="{{ asset('images/mido1.png') }}" alt=""></div>
     </div>
     <div class="am-ctrl">
-      <button wire:click="previousQueue" class="am-btn am-btn-prev">← Previous</button>
-      <button wire:click="nextQueue"     class="am-btn am-btn-next">✓ Panggil Berikutnya</button>
-      <button onclick="confirmResetQueue()" class="am-btn am-btn-close">✕ Tutup Antrian</button>
+      <button wire:click="previousQueue" class="am-btn am-btn-prev">
+    ← Previous
+</button>
+
+<button wire:click="nextQueue" class="am-btn am-btn-next">
+    ✓ Panggil Berikutnya
+</button>
+
+<button
+    wire:click="openAllServices"
+    class="am-btn"
+    style="
+        background:linear-gradient(135deg,#2563eb,#3b82f6);
+        color:#fff;
+        box-shadow:0 4px 14px rgba(37,99,235,.25);
+    "
+>
+    🔓 Buka Semua Layanan
+</button>
+
+<button
+    onclick="confirmResetQueue()"
+    class="am-btn am-btn-close"
+>
+    ✕ Tutup Antrian
+</button>
     </div>
   </div>
 
@@ -275,12 +309,25 @@ document.addEventListener('livewire:init', () => {
 @if($showLayanan)
 <div class="am-lay-item">
     <div class="am-lay-name">{{ $lay->nama }}</div>
-    <button
-        wire:click="toggleLayanan('{{ $lay->kode }}')"
-        class="am-toggle {{ $lay->is_open ? 'am-tog-open' : 'am-tog-closed' }}"
-    >
-        {{ $lay->is_open ? '⊗ Tutup Layanan' : '⊕ Buka Layanan' }}
-    </button>
+    @if($lay->is_open)
+
+<button
+    onclick="confirmCloseLayanan('{{ $lay->kode }}')"
+    class="am-toggle am-tog-open"
+>
+    ⊗ Tutup Layanan
+</button>
+
+@else
+
+<button
+    wire:click="toggleLayanan('{{ $lay->kode }}')"
+    class="am-toggle am-tog-closed"
+>
+    ⊕ Buka Layanan
+</button>
+
+@endif
 </div>
 @endif
 
@@ -378,6 +425,53 @@ function confirmLogout(event)
 
     });
 }
+function confirmCloseLayanan(kode)
+{
+    let defaultTime = '13:00';
+
+    if(kode === 'B' || kode === 'D'){
+        defaultTime = '07:30';
+    }
+
+    Swal.fire({
+        icon: 'warning',
+        title: 'Tutup Layanan',
+        html: `
+            <div style="margin-bottom:10px;font-size:14px">
+                Pilih Jam Buka Kembali
+            </div>
+
+            <input
+                type="time"
+                id="jam_buka"
+                class="swal2-input"
+                value="${defaultTime}"
+            >
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Tutup Layanan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#dc2626',
+
+        preConfirm: () => {
+            return document.getElementById('jam_buka').value;
+        }
+
+    }).then((result)=>{
+
+        if(result.isConfirmed){
+
+            Livewire.dispatch('close-layanan', {
+                kode: kode,
+                jam: result.value
+            });
+
+        }
+
+    });
+}
+
+
 </script>
 
 </div>
