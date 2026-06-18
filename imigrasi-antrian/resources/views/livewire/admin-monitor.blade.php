@@ -62,10 +62,56 @@ document.addEventListener('livewire:init', () => {
 .am-brand{font-weight:700;font-size:.85rem;color:#fff;}
 .am-brand-sub{font-size:.57rem;color:rgba(255,255,255,.5);letter-spacing:1.8px;text-transform:uppercase;}
 .am-nav-r{display:flex;align-items:center;gap:9px;}
-.am-chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:50px;padding:5px 13px 5px 8px;}
+
+/* CHIP + DROPDOWN */
+.am-chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:50px;padding:5px 13px 5px 8px;position:relative;cursor:pointer;user-select:none;}
 .am-av{width:26px;height:26px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.72rem;color:#fff;}
 .am-uname{font-weight:700;font-size:.78rem;color:#fff;}
 .am-uloket{font-size:.6rem;color:rgba(255,255,255,.55);}
+.am-caret{font-size:.55rem;color:rgba(255,255,255,.55);margin-left:2px;transition:transform .18s ease;line-height:1;}
+.am-chip.open .am-caret{transform:rotate(180deg);}
+
+.am-dropdown{
+    position:absolute;top:calc(100% + 12px);right:0;
+    background:#fff;
+    border:1.5px solid rgba(16,48,96,.10);
+    border-radius:16px;
+    box-shadow:0 12px 40px rgba(16,48,96,.18);
+    min-width:210px;
+    overflow:hidden;
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(-8px);
+    transition:opacity .18s ease, transform .18s ease;
+    z-index:999;
+}
+.am-dropdown.open{opacity:1;pointer-events:auto;transform:translateY(0);}
+
+.am-dd-head{padding:15px 17px 13px;background:#f8faff;border-bottom:1px solid rgba(16,48,96,.08);}
+.am-dd-name{font-weight:700;font-size:.83rem;color:#0d1f3c;margin-bottom:2px;}
+.am-dd-email{font-size:.69rem;color:#7a92b8;font-weight:500;}
+.am-dd-loket{display:inline-flex;align-items:center;gap:4px;margin-top:7px;background:var(--ice);border:1px solid var(--ice-mid);border-radius:50px;padding:2px 10px;font-size:.63rem;font-weight:700;color:var(--navy-mid);}
+
+.am-dd-sep{height:1px;background:rgba(16,48,96,.07);}
+
+.am-dd-item{
+    display:flex;align-items:center;gap:10px;
+    padding:11px 17px;
+    font-size:.8rem;font-weight:600;
+    color:#3a4f72;
+    cursor:pointer;
+    transition:background .15s;
+    text-decoration:none;
+    width:100%;border:none;background:none;
+    font-family:'Inter',sans-serif;
+    text-align:left;
+}
+.am-dd-item:hover{background:#f4f7fd;color:#103060;}
+.am-dd-item .am-dd-ico{font-size:.9rem;width:20px;text-align:center;}
+.am-dd-item.danger{color:#dc2626;}
+.am-dd-item.danger:hover{background:#fff5f5;color:#b91c1c;}
+
+/* CLK */
 .am-clk{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:50px;padding:5px 16px;font-weight:700;font-size:.88rem;color:#fff;letter-spacing:2px;}
 
 /* CONTENT */
@@ -128,13 +174,53 @@ document.addEventListener('livewire:init', () => {
     <div><div class="am-brand">IMIGRASI MAKASSAR</div><div class="am-brand-sub">Admin Monitor · Panel Antrian</div></div>
   </div>
   <div class="am-nav-r">
-    <div class="am-chip">
+
+    {{-- User Chip with Dropdown --}}
+    <div
+    class="am-chip"
+    id="am-user-chip"
+    onclick="toggleAmDropdown(event)"
+    wire:ignore
+>
       <div class="am-av">{{ strtoupper(substr(auth()->user()->name,0,2)) }}</div>
-      <div><div class="am-uname">{{ auth()->user()->name }}</div><div class="am-uloket">{{ auth()->user()->loket }}</div></div>
-    </div>
-    <div class="am-clk" id="am-clk" wire:ignore>
-    --:--:--
-</div>
+      <div>
+        <div class="am-uname">{{ auth()->user()->name }}</div>
+        <div class="am-uloket">{{ auth()->user()->loket }}</div>
+      </div>
+      <span class="am-caret">▼</span>
+
+      <div class="am-dropdown" id="am-dropdown">
+        {{-- Header --}}
+        <div class="am-dd-head">
+          <div class="am-dd-name">{{ auth()->user()->name }}</div>
+          <div class="am-dd-email">{{ auth()->user()->email }}</div>
+          <div class="am-dd-loket">◉ {{ auth()->user()->loket }}</div>
+        </div>
+
+        <div class="am-dd-sep"></div>
+
+        {{-- Logout --}}
+        <form
+    id="logout-form"
+    method="POST"
+    action="{{ route('logout') }}"
+    onclick="event.stopPropagation()"
+>
+    @csrf
+
+    <button
+        type="button"
+        class="am-dd-item danger"
+        onclick="confirmLogout(event)"
+    >
+        <span class="am-dd-ico">⏻</span>
+        Keluar
+    </button>
+</form>
+</div> <!-- am-dropdown -->
+
+</div> <!-- am-chip -->
+    <div class="am-clk" id="am-clk" wire:ignore>--:--:--</div>
   </div>
 </div>
 
@@ -162,12 +248,7 @@ document.addEventListener('livewire:init', () => {
     <div class="am-ctrl">
       <button wire:click="previousQueue" class="am-btn am-btn-prev">← Previous</button>
       <button wire:click="nextQueue"     class="am-btn am-btn-next">✓ Panggil Berikutnya</button>
-      <!-- <button wire:click="closeQueue"    class="am-btn am-btn-close">✕ Tutup Antrian</button> -->
-       <button
-    onclick="confirmResetQueue()"
-    class="am-btn am-btn-close">
-    ✕ Tutup Antrian
-</button>
+      <button onclick="confirmResetQueue()" class="am-btn am-btn-close">✕ Tutup Antrian</button>
     </div>
   </div>
 
@@ -181,12 +262,10 @@ document.addEventListener('livewire:init', () => {
 @php
     $showLayanan =
         auth()->user()->loket == 'Admin' ||
-
         (
             auth()->user()->loket == 'Loket 1' &&
             in_array($lay->kode, ['A','B'])
         ) ||
-
         (
             auth()->user()->loket == 'Loket 2' &&
             in_array($lay->kode, ['C','D'])
@@ -194,10 +273,8 @@ document.addEventListener('livewire:init', () => {
 @endphp
 
 @if($showLayanan)
-
 <div class="am-lay-item">
     <div class="am-lay-name">{{ $lay->nama }}</div>
-
     <button
         wire:click="toggleLayanan('{{ $lay->kode }}')"
         class="am-toggle {{ $lay->is_open ? 'am-tog-open' : 'am-tog-closed' }}"
@@ -205,12 +282,10 @@ document.addEventListener('livewire:init', () => {
         {{ $lay->is_open ? '⊗ Tutup Layanan' : '⊕ Buka Layanan' }}
     </button>
 </div>
-
 @endif
 
 @endforeach
 
-</div>
     </div>
   </div>
 
@@ -239,13 +314,70 @@ document.addEventListener('livewire:init', () => {
 </div>
 
 <script>
-(function(){function t(){var n=new Date(),p=function(v){return String(v).padStart(2,'0')};var e=document.getElementById('am-clk');if(e)e.textContent=p(n.getHours())+':'+p(n.getMinutes())+':'+p(n.getSeconds());}t();setInterval(t,1000);})();
+(function(){
+  function t(){
+    var n=new Date(),p=function(v){return String(v).padStart(2,'0')};
+    var e=document.getElementById('am-clk');
+    if(e) e.textContent=p(n.getHours())+':'+p(n.getMinutes())+':'+p(n.getSeconds());
+  }
+  t(); setInterval(t,1000);
+})();
+
 document.addEventListener('livewire:init',()=>{
   Livewire.on('queue-called',(d)=>{
     var u=new SpeechSynthesisUtterance('Nomor antrian '+d.kode+' '+d.nomor+', silakan menuju '+d.loket);
-    u.lang='id-ID';u.rate=.9;window.speechSynthesis.speak(u);
+    u.lang='id-ID'; u.rate=.9; window.speechSynthesis.speak(u);
   });
 });
+
+/* ── DROPDOWN LOGOUT ── */
+function toggleAmDropdown(e) {
+  e.stopPropagation();
+  var chip = document.getElementById('am-user-chip');
+  var dd   = document.getElementById('am-dropdown');
+  var isOpen = dd.classList.contains('open');
+  dd.classList.toggle('open', !isOpen);
+  chip.classList.toggle('open', !isOpen);
+}
+
+// Tutup saat klik di luar chip
+document.addEventListener('click', function(e) {
+  var chip = document.getElementById('am-user-chip');
+  if (chip && !chip.contains(e.target)) {
+    document.getElementById('am-dropdown').classList.remove('open');
+    chip.classList.remove('open');
+  }
+});
+
+// Tutup saat Livewire re-render (wire:poll bisa bikin dropdown "ghost")
+document.addEventListener('livewire:navigated', function() {
+  var dd = document.getElementById('am-dropdown');
+  if (dd) dd.classList.remove('open');
+});
+function confirmLogout(event)
+{
+    event.preventDefault();
+
+    Swal.fire({
+        icon: 'question',
+        title: 'Keluar dari Sistem?',
+        text: 'Anda yakin ingin logout dari Admin Monitor?',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Logout',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#64748b',
+        reverseButtons: true
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            document.getElementById('logout-form').submit();
+
+        }
+
+    });
+}
 </script>
 
 </div>
