@@ -308,7 +308,9 @@ document.addEventListener('livewire:init', () => {
 
 @if($showLayanan)
 <div class="am-lay-item">
-    <div class="am-lay-name">{{ $lay->nama }}</div>
+    <div class="am-lay-name">
+    {{ $lay->nama }} ({{ $lay->kode }})
+</div>
     @if($lay->is_open)
 
 <button
